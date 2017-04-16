@@ -1,0 +1,12 @@
+(do
+
+  (def add1 (fn ()
+    (do
+      (let x 1)
+      (fn (y) (+ y x)))))
+
+  (def addn (fn (n)
+    (fn (y) (+ y n))))
+
+  (print ((add1) 1))
+  (print ((addn 5) 1)))

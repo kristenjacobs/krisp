@@ -41,7 +41,10 @@ def number(n):
     try:
         return int(n)
     except ValueError:
-        return float(n)
+        try:
+            return float(n)
+        except ValueError:
+            raise Exception, "Unable to convert " + str(n) + " to a number"
 
 
 def defined(key, global_env, local_env):
@@ -70,11 +73,12 @@ def evaluate(ast, global_env, local_env):
             function = str(ast[0])
           
         if defined(function, global_env, local_env):
-            debug("evaluating function: " + str(function))
+            debug("evaluating function: " + str(function))            
             args = lookup(function, global_env, local_env)[0]
             body = lookup(function, global_env, local_env)[1]
+            env = lookup(function, global_env, local_env)[2]
             i = 1
-            f_local_env = {}
+            f_local_env = env.copy()
             for arg in args:
                 f_local_env[arg] = evaluate(ast[i], global_env, local_env)
                 i += 1
@@ -125,7 +129,7 @@ def evaluate(ast, global_env, local_env):
         elif function == "fn":
             name = str(uuid.uuid4())
             debug("evaluating fn: " + name)
-            global_env[name] = (ast[1], ast[2])
+            global_env[name] = (ast[1], ast[2], local_env)
             return name
 
         elif function == "if":
