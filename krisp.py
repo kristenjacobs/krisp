@@ -1,18 +1,24 @@
 #!/usr/bin/env python
 
+
+from pprint import pprint
 import glob
 import shlex
 import sys
 import traceback
 import os
+import uuid
 
 
 DEBUG = False
 
 
-def debug(string):
+def debug(obj, pp=False):
     if DEBUG:
-        print string
+        if pp:
+            pprint(obj)
+        else:    
+            print str(obj)
 
 
 def tokenise(program):
@@ -32,80 +38,92 @@ def parse(tokens):
     return ast
 
 
+def lookup(key, env):
+    result = key
+    while str(result) in env:
+        result = env[str(result)]
+    return result    
+
+
 def evaluate(ast, env):
-    debug("evaluate: " + str(ast))
     if isinstance(ast, list):
-        i = 0
-        result = None
-        while i < len(ast):
-            if isinstance(ast[i], list):
-                result = evaluate(ast[i], env)
-                i += 1
-            else:
-                function = str(ast[i])
-                if function in env:
-                    debug("Evaluating function: " + str(function))
-                    i += 1
-                    args = env[function][0]
-                    body = env[function][1]
-                    f_env = env.copy()
-                    for arg in args:
-                        f_env[arg] = evaluate(ast[i], env)
-                        i += 1
-                    result = evaluate(body, f_env)
-
-                elif function == "+":
-                    debug("Evaluating +")
-                    result = int(evaluate(ast[i + 1], env)) + \
-                             int(evaluate(ast[i + 2], env))
-                    i += 3
-                elif function == "-":
-                    debug("Evaluating -")
-                    result = int(evaluate(ast[i + 1], env)) - \
-                             int(evaluate(ast[i + 2], env))
-                    i += 3
-                elif function == "*":
-                    debug("Evaluating *")
-                    result = int(evaluate(ast[i + 1], env)) * \
-                             int(evaluate(ast[i + 2], env))
-                    i += 3
-                elif function == "/":
-                    debug("Evaluating /")
-                    result = int(evaluate(ast[i + 1], env)) / \
-                             int(evaluate(ast[i + 2], env))
-                    i += 3
-                elif function == "let":
-                    debug("Evaluating let")
-                    env[str(ast[i + 1])] = evaluate(ast[i + 2], env)  
-                    result = None
-                    i += 3
-                elif function == "fn":
-                    debug("Evaluating fn")
-                    env[str(ast[i + 1])] = (ast[i + 2], ast[i + 3])
-                    result = None
-                    i += 4
-
-                elif function == "print":
-                    debug("Evaluating print")
-                    print str(evaluate(ast[i + 1], env))
-                    result = None
-                    i += 2
-                else:
-                    raise Exception, "Function: " + function + " not defined"
-        return result
-    else:
-        if ast in env:
-            return env[ast]
+        if isinstance(ast[0], list):
+            function = evaluate(ast[0], env)
         else:
-            return ast
+            function = str(ast[0])
+
+        if function in env:
+            debug("evaluating function: " + str(function))
+            args = lookup(function, env)[0]
+            body = lookup(function, env)[1]
+            f_env = env.copy()
+            i = 1
+            for arg in args:
+                f_env[arg] = evaluate(ast[i], env)
+                i += 1
+            return evaluate(body, f_env)
+
+        elif function == "+":
+            debug("evaluating +")
+            return int(evaluate(ast[1], env)) + \
+                   int(evaluate(ast[2], env))
+
+        elif function == "-":
+            debug("evaluating -")
+            return int(evaluate(ast[1], env)) - \
+                   int(evaluate(ast[2], env))
+
+        elif function == "*":
+            debug("evaluating *")
+            return int(evaluate(ast[1], env)) * \
+                   int(evaluate(ast[2], env))
+
+        elif function == "/":
+            debug("evaluating /")
+            return int(evaluate(ast[1], env)) / \
+                   int(evaluate(ast[2], env))
+
+        elif function == "def":
+            debug("evaluating def")
+            env[str(ast[1])] = evaluate(ast[2], env)  
+            return None
+
+        elif function == "do":
+            debug("evaluating do")
+            result = None
+            for i in range(1, len(ast)):
+                result = evaluate(ast[i], env)  
+            return result
+
+        elif function == "let":
+            debug("evaluating let")
+            env[str(ast[1])] = evaluate(ast[2], env)  
+            return None
+
+        elif function == "fn":
+            debug("evaluating fn")
+            name = str(uuid.uuid4())
+            env[name] = (ast[1], ast[2])
+            return name
+
+        elif function == "print":
+            debug("evaluating print")
+            print str(evaluate(ast[1], env))
+            return None
+        else:
+            raise Exception, "Function: " + function + " not defined"
+    else:
+        return lookup(ast, env)
 
 
 def process(program):
     try:
+        debug("Tokens")
         tokens = tokenise(program)
-        debug("The tokens are: " + str(tokens))
-        ast = parse(tokens)
-        debug("The AST is: " + str(ast))
+        debug(tokens)
+        debug("AST")
+        ast = parse(tokens)[0]
+        debug(ast, True)
         evaluate(ast, {})
 
     except Exception, ex:

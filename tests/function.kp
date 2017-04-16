@@ -1,0 +1,9 @@
+(do
+
+  (def add (fn (x y)
+    (do
+      (print x)
+      (print y)
+      (+ x y))))
+
+  (print (add 10 12)))
