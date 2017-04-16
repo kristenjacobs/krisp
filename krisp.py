@@ -92,6 +92,11 @@ def evaluate(ast, global_env, local_env):
             return int(evaluate(ast[1], global_env, local_env)) / \
                    int(evaluate(ast[2], global_env, local_env))
 
+        elif function == "=":
+            debug("evaluating =")
+            return int(evaluate(ast[1], global_env, local_env)) == \
+                   int(evaluate(ast[2], global_env, local_env))
+
         elif function == "def":
             debug("evaluating def: " + str(ast[1]))
             global_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
@@ -116,6 +121,13 @@ def evaluate(ast, global_env, local_env):
             global_env[name] = (ast[1], ast[2])
             debug("Updated global_env: " + str(global_env))
             return name
+
+        elif function == "if":
+            debug("evaluating if")
+            if evaluate(ast[1], global_env, local_env):
+                return evaluate(ast[2], global_env, local_env)
+            else:
+                return evaluate(ast[3], global_env, local_env)
 
         elif function == "print":
             debug("evaluating print")

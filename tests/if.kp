@@ -1,0 +1,8 @@
+(do 
+  (if (= 2 2) 
+    (print "Pass")
+    (print "Fail"))
+  (if (= 2 1)
+    (print "Fail")
+    (print "Pass")))
+
