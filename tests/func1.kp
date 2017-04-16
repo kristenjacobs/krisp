@@ -1,0 +1,8 @@
+(fn add (x y) 
+  (+ x y))
+
+(fn sub (x y)
+  (- x y))
+
+(print (add 5 6))
+(print (sub 5 2))
