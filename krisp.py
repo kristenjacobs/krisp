@@ -62,10 +62,6 @@ def lookup(key, global_env, local_env):
 
 
 def evaluate(ast, global_env, local_env):
-    debug("evaluate: " + str(ast) + \
-          ", global_env: " + str(global_env) + \
-          ", local_env: " + str(local_env))
-
     if isinstance(ast, list):
         if isinstance(ast[0], list):
             function = evaluate(ast[0], global_env, local_env)
@@ -144,19 +140,31 @@ def evaluate(ast, global_env, local_env):
             print str(evaluate(ast[1], global_env, local_env))
             return None
 
+        elif function == "list":
+            debug("evaluating list")
+            result = []
+            for i in range(1, len(ast)):
+                result.append(evaluate(ast[i], global_env, local_env))
+            return result
+
+        elif function == "first":
+            debug("evaluating first: " + str(ast))
+            return evaluate(ast[1], global_env, local_env)[0]
+
+        elif function == "rest":
+            debug("evaluating rest")
+            return evaluate(ast[1], global_env, local_env)[1:]
+
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
+        debug("performing lookup: " + str(ast))
         return lookup(ast, global_env, local_env)
 
 
 def process(program):
     try:
-        debug("Tokens")
-        tokens = tokenise(program)
-        debug(tokens)
-        debug("AST")
-        ast = parse(tokens)[0]
+        ast = parse(tokenise(program))[0]
         debug(ast, True)
         evaluate(ast, {}, {})
 
