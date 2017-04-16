@@ -37,6 +37,12 @@ def parse(tokens):
             ast.append(token)
     return ast
 
+def number(n):
+    try:
+        return int(n)
+    except ValueError:
+        return float(n)
+
 
 def defined(key, global_env, local_env):
     return str(key) in local_env or str(key) in global_env
@@ -53,7 +59,10 @@ def lookup(key, global_env, local_env):
 
 
 def evaluate(ast, global_env, local_env):
-    debug("evaluate: " + str(ast))
+    debug("evaluate: " + str(ast) + \
+          ", global_env: " + str(global_env) + \
+          ", local_env: " + str(local_env))
+
     if isinstance(ast, list):
         if isinstance(ast[0], list):
             function = evaluate(ast[0], global_env, local_env)
@@ -69,33 +78,32 @@ def evaluate(ast, global_env, local_env):
             for arg in args:
                 f_local_env[arg] = evaluate(ast[i], global_env, local_env)
                 i += 1
-            debug("function f_local_env: " + str(f_local_env))    
             return evaluate(body, global_env, f_local_env)
 
         elif function == "+":
             debug("evaluating +")
-            return int(evaluate(ast[1], global_env, local_env)) + \
-                   int(evaluate(ast[2], global_env, local_env))
+            return number(evaluate(ast[1], global_env, local_env)) + \
+                   number(evaluate(ast[2], global_env, local_env))
 
         elif function == "-":
             debug("evaluating -")
-            return int(evaluate(ast[1], global_env, local_env)) - \
-                   int(evaluate(ast[2], global_env, local_env))
+            return number(evaluate(ast[1], global_env, local_env)) - \
+                   number(evaluate(ast[2], global_env, local_env))
 
         elif function == "*":
             debug("evaluating *")
-            return int(evaluate(ast[1], global_env, local_env)) * \
-                   int(evaluate(ast[2], global_env, local_env))
+            return number(evaluate(ast[1], global_env, local_env)) * \
+                   number(evaluate(ast[2], global_env, local_env))
 
         elif function == "/":
             debug("evaluating /")
-            return int(evaluate(ast[1], global_env, local_env)) / \
-                   int(evaluate(ast[2], global_env, local_env))
+            return number(evaluate(ast[1], global_env, local_env)) / \
+                   number(evaluate(ast[2], global_env, local_env))
 
         elif function == "=":
             debug("evaluating =")
-            return int(evaluate(ast[1], global_env, local_env)) == \
-                   int(evaluate(ast[2], global_env, local_env))
+            return number(evaluate(ast[1], global_env, local_env)) == \
+                   number(evaluate(ast[2], global_env, local_env))
 
         elif function == "def":
             debug("evaluating def: " + str(ast[1]))
@@ -112,14 +120,12 @@ def evaluate(ast, global_env, local_env):
         elif function == "let":
             debug("evaluating let")
             local_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
-            debug("Updated local_env: " + str(local_env))
             return None
 
         elif function == "fn":
             name = str(uuid.uuid4())
             debug("evaluating fn: " + name)
             global_env[name] = (ast[1], ast[2])
-            debug("Updated global_env: " + str(global_env))
             return name
 
         elif function == "if":
@@ -173,8 +179,7 @@ def main():
         runtests()
     else:
         with open(sys.argv[1], 'r') as infile:
-            contents = infile.read().rstrip('\n')
-            process(contents)
+            process(infile.read().rstrip('\n'))
 
 
 if __name__ == "__main__":
