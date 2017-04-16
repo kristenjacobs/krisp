@@ -4,12 +4,9 @@ A really simple LISP.
 
 ## TODO
 
-- Implement test harness
+- Split the gobal and local namespaces.
 - Test recursion (looping) works as expected.
 - Implement if.
-- Split the gobal and local namespaces.
-- Update fn to add an entry in the global namespace, with a uuid name.
-- Implement def + defn
 - Cast to 'number' instead of just int, i.e. accept floats.
 - Support functions as first class, i.e. passing, returning and lambdas (+ closures).
 * Add support for builtin 'list' function to create a list (i.e. quote)

@@ -38,82 +38,94 @@ def parse(tokens):
     return ast
 
 
-def lookup(key, env):
+def defined(key, global_env, local_env):
+    return str(key) in local_env or str(key) in global_env
+
+
+def lookup(key, global_env, local_env):
     result = key
-    while str(result) in env:
-        result = env[str(result)]
+    while str(result) in local_env or str(result) in global_env:
+        if str(result) in local_env:
+            result = local_env[str(result)]
+        elif str(result) in global_env:
+            result = global_env[str(result)]
     return result    
 
 
-def evaluate(ast, env):
+def evaluate(ast, global_env, local_env):
+    debug("evaluate: " + str(ast))
     if isinstance(ast, list):
         if isinstance(ast[0], list):
-            function = evaluate(ast[0], env)
+            function = evaluate(ast[0], global_env, local_env)
         else:
             function = str(ast[0])
-
-        if function in env:
+          
+        if defined(function, global_env, local_env):
             debug("evaluating function: " + str(function))
-            args = lookup(function, env)[0]
-            body = lookup(function, env)[1]
-            f_env = env.copy()
+            args = lookup(function, global_env, local_env)[0]
+            body = lookup(function, global_env, local_env)[1]
             i = 1
+            f_local_env = {}
             for arg in args:
-                f_env[arg] = evaluate(ast[i], env)
+                f_local_env[arg] = evaluate(ast[i], global_env, local_env)
                 i += 1
-            return evaluate(body, f_env)
+            debug("function f_local_env: " + str(f_local_env))    
+            return evaluate(body, global_env, f_local_env)
 
         elif function == "+":
             debug("evaluating +")
-            return int(evaluate(ast[1], env)) + \
-                   int(evaluate(ast[2], env))
+            return int(evaluate(ast[1], global_env, local_env)) + \
+                   int(evaluate(ast[2], global_env, local_env))
 
         elif function == "-":
             debug("evaluating -")
-            return int(evaluate(ast[1], env)) - \
-                   int(evaluate(ast[2], env))
+            return int(evaluate(ast[1], global_env, local_env)) - \
+                   int(evaluate(ast[2], global_env, local_env))
 
         elif function == "*":
             debug("evaluating *")
-            return int(evaluate(ast[1], env)) * \
-                   int(evaluate(ast[2], env))
+            return int(evaluate(ast[1], global_env, local_env)) * \
+                   int(evaluate(ast[2], global_env, local_env))
 
         elif function == "/":
             debug("evaluating /")
-            return int(evaluate(ast[1], env)) / \
-                   int(evaluate(ast[2], env))
+            return int(evaluate(ast[1], global_env, local_env)) / \
+                   int(evaluate(ast[2], global_env, local_env))
 
         elif function == "def":
-            debug("evaluating def")
-            env[str(ast[1])] = evaluate(ast[2], env)  
+            debug("evaluating def: " + str(ast[1]))
+            global_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
             return None
 
         elif function == "do":
             debug("evaluating do")
             result = None
             for i in range(1, len(ast)):
-                result = evaluate(ast[i], env)  
+                result = evaluate(ast[i], global_env, local_env)  
             return result
 
         elif function == "let":
             debug("evaluating let")
-            env[str(ast[1])] = evaluate(ast[2], env)  
+            local_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
+            debug("Updated local_env: " + str(local_env))
             return None
 
         elif function == "fn":
-            debug("evaluating fn")
             name = str(uuid.uuid4())
-            env[name] = (ast[1], ast[2])
+            debug("evaluating fn: " + name)
+            global_env[name] = (ast[1], ast[2])
+            debug("Updated global_env: " + str(global_env))
             return name
 
         elif function == "print":
             debug("evaluating print")
-            print str(evaluate(ast[1], env))
+            print str(evaluate(ast[1], global_env, local_env))
             return None
+
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
-        return lookup(ast, env)
+        return lookup(ast, global_env, local_env)
 
 
 def process(program):
@@ -124,7 +136,7 @@ def process(program):
         debug("AST")
         ast = parse(tokens)[0]
         debug(ast, True)
-        evaluate(ast, {})
+        evaluate(ast, {}, {})
 
     except Exception, ex:
         print "Error: " + str(ex)

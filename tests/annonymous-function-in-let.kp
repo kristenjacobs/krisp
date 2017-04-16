@@ -1,0 +1,3 @@
+(do
+  (let inc (fn (y) (+ y 21)))
+  (print (inc 2)))

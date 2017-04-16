@@ -1,0 +1,6 @@
+(do
+
+  (def inc (fn ()
+    (fn (y) (+ y 1))))
+
+  (print ((inc) 1)))
