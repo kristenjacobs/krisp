@@ -155,11 +155,18 @@ def evaluate(ast, global_env, local_env):
             debug("evaluating rest")
             return evaluate(ast[1], global_env, local_env)[1:]
 
+        elif function == "conj":
+            debug("evaluating conj: " + str(ast))
+            result = evaluate(ast[1], global_env, local_env)
+            result.append(evaluate(ast[2], global_env, local_env))
+            return result
+
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
-        debug("performing lookup: " + str(ast))
-        return lookup(ast, global_env, local_env)
+        value = lookup(ast, global_env, local_env)
+        debug("performing lookup: " + str(ast) + " -> " + str(value))
+        return value
 
 
 def process(program):
