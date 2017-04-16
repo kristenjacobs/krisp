@@ -101,9 +101,12 @@ def evaluate(ast, global_env, local_env):
                    number(evaluate(ast[2], global_env, local_env))
 
         elif function == "=":
-            debug("evaluating =")
-            return number(evaluate(ast[1], global_env, local_env)) == \
-                   number(evaluate(ast[2], global_env, local_env))
+            debug("evaluating = " + str(ast[1]) + str(ast[2]))
+            if isinstance(ast[1], list) and isinstance(ast[2], list):
+                return ast[1] == ast[2]
+            else:    
+                return number(evaluate(ast[1], global_env, local_env)) == \
+                       number(evaluate(ast[2], global_env, local_env))
 
         elif function == "def":
             debug("evaluating def: " + str(ast[1]))
@@ -169,11 +172,13 @@ def evaluate(ast, global_env, local_env):
         return value
 
 
-def process(program):
+def run_file(filename, global_env):
     try:
-        ast = parse(tokenise(program))[0]
-        debug(ast, True)
-        evaluate(ast, {}, {})
+        with open(filename, 'r') as infile:
+            program = infile.read().rstrip('\n')
+            ast = parse(tokenise(program))[0]
+            debug(ast, True)
+            evaluate(ast, global_env, {})
 
     except Exception, ex:
         print "Error: " + str(ex)
@@ -181,7 +186,15 @@ def process(program):
         sys.exit(1)
 
 
-def runtests():
+def load_libs(global_env):
+    libs = glob.glob("lib/*.kp")
+    libs.sort()
+    for lib in libs:
+        debug("Loading: " + lib)
+        run_file(lib, global_env)
+
+
+def run_tests():
     tests = glob.glob("tests/*.kp")
     tests.sort()
     for test in tests:    
@@ -195,10 +208,12 @@ def runtests():
 
 def main():
     if len(sys.argv) == 1:
-        runtests()
+        run_tests()
     else:
-        with open(sys.argv[1], 'r') as infile:
-            process(infile.read().rstrip('\n'))
+        global_env = {}
+        load_libs(global_env)
+        for arg in sys.argv[1:]:
+            run_file(arg, global_env)
 
 
 if __name__ == "__main__":

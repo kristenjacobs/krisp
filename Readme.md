@@ -4,5 +4,11 @@ A really simple LISP.
 
 ## TODO
 
-- Add library function to map over list.
-- Add library function to reduce over lists.
+- Implemnt equality for both numbers and lists.
+- Sort out the logging.
+- Handle comments.
+- Implement library functions to map/reduce/filter over lists.
+- Test the core lib functions.
+- Implement the logical operators + suuport boolean types.
+- Extend first/rest/conj to work on strings.
+- Implement concat for lists and strings in the library.

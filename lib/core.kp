@@ -1,0 +1,10 @@
+(do 
+ 
+  (def add (fn (x y)
+    (+ x y)))
+
+  (def sub (fn (x y)
+    (- x y)))
+
+  (def map (fn (f coll)
+    coll)))
