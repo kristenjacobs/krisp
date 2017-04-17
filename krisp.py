@@ -3,6 +3,7 @@
 import glob
 import os
 import pprint
+import re
 import shlex
 import sys
 import traceback
@@ -15,7 +16,7 @@ def debug(obj):
         pprint.pprint(obj)
 
 
-def tokenise(program):
+def lex(program):
     return shlex.split(program.replace('(', ' ( ').replace(')', ' ) '))
 
 
@@ -150,11 +151,18 @@ def evaluate(ast, global_env, local_env):
         return value
 
 
+def remove_comments(infile):
+    program = ""
+    for line in infile.readlines():
+        program += re.sub(r';.*', '', line.rstrip('\n'))
+    return program
+
+
 def run_file(filename, global_env):
     try:
         with open(filename, 'r') as infile:
-            program = infile.read().rstrip('\n')
-            ast = parse(tokenise(program))[0]
+            program = remove_comments(infile)
+            ast = parse(lex(program))[0]
             debug(ast)
             evaluate(ast, global_env, {})
 

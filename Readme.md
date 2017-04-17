@@ -4,8 +4,6 @@ A really simple LISP.
 
 ## TODO
 
-- Implement equality for both numbers and lists.
-- Sort out the logging.
 - Handle comments.
 - Implement library functions to map/reduce/filter over lists.
 - Test the core lib functions.
