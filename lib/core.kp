@@ -6,5 +6,11 @@
   (def sub (fn (x y)
     (- x y)))
 
+  (def reduce (fn (f v l)
+    (if (= l (list))
+      v
+      (reduce f (f v (first l)) (rest l)))))
+
   (def map (fn (f l)
+    ; TODO
     l)))

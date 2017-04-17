@@ -82,10 +82,12 @@ def evaluate(ast, genv, lenv):
             return num(evaluate(ast[1], genv, lenv)) / num(evaluate(ast[2], genv, lenv))
 
         elif function == "=":
-            if isinstance(ast[1], list) and isinstance(ast[2], list):
-                return ast[1] == ast[2]
+            lhs = evaluate(ast[1], genv, lenv)
+            rhs = evaluate(ast[2], genv, lenv)
+            if isinstance(lhs, list) and isinstance(rhs, list):
+                return lhs == rhs
             else:
-                return num(evaluate(ast[1], genv, lenv)) == num(evaluate(ast[2], genv, lenv))
+                return num(lhs) == num(rhs)
 
         elif function == "def":
             genv[str(ast[1])] = evaluate(ast[2], genv, lenv)

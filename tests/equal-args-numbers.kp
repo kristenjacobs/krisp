@@ -1,0 +1,8 @@
+(do
+
+  (def f (fn (n1 n2)
+    (if (= n1 n2)
+      (print "They are the same")
+      (print "They are different"))))
+
+  (f 2 2))
