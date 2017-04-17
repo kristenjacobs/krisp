@@ -32,7 +32,8 @@ def parse(tokens):
             ast.append(token)
     return ast
 
-def number(n):
+
+def num(n):
     try:
         return int(n)
     except ValueError:
@@ -42,112 +43,100 @@ def number(n):
             raise Exception, "Unable to convert " + str(n) + " to a number"
 
 
-def defined(key, global_env, local_env):
-    return str(key) in local_env or str(key) in global_env
+def defined(key, genv, lenv):
+    return str(key) in lenv or str(key) in genv
 
 
-def lookup(key, global_env, local_env):
+def lookup(key, genv, lenv):
     result = key
-    while str(result) in local_env or str(result) in global_env:
-        if str(result) in local_env:
-            result = local_env[str(result)]
-        elif str(result) in global_env:
-            result = global_env[str(result)]
+    while str(result) in lenv or str(result) in genv:
+        if str(result) in lenv:
+            result = lenv[str(result)]
+        elif str(result) in genv:
+            result = genv[str(result)]
     return result
 
 
-def evaluate(ast, global_env, local_env):
+def evaluate(ast, genv, lenv):
     debug("evaluate ast: " + str(ast))
     if isinstance(ast, list):
-        if isinstance(ast[0], list):
-            function = evaluate(ast[0], global_env, local_env)
-        else:
-            function = str(ast[0])
+        function = evaluate(ast[0], genv, lenv) if isinstance(ast[0], list) else str(ast[0])
 
-        if defined(function, global_env, local_env):
-            args = lookup(function, global_env, local_env)[0]
-            body = lookup(function, global_env, local_env)[1]
-            env = lookup(function, global_env, local_env)[2]
-            i = 1
-            f_local_env = env.copy()
-            for arg in args:
-                f_local_env[arg] = evaluate(ast[i], global_env, local_env)
-                i += 1
-            return evaluate(body, global_env, f_local_env)
+        if defined(function, genv, lenv):
+            func = lookup(function, genv, lenv)
+            f_lenv = func[2].copy()
+            for i, arg in enumerate(func[0]):
+                f_lenv[arg] = evaluate(ast[i + 1], genv, lenv)
+            return evaluate(func[1], genv, f_lenv)
 
         elif function == "+":
-            return number(evaluate(ast[1], global_env, local_env)) + \
-                   number(evaluate(ast[2], global_env, local_env))
+            return num(evaluate(ast[1], genv, lenv)) + num(evaluate(ast[2], genv, lenv))
 
         elif function == "-":
-            return number(evaluate(ast[1], global_env, local_env)) - \
-                   number(evaluate(ast[2], global_env, local_env))
+            return num(evaluate(ast[1], genv, lenv)) - num(evaluate(ast[2], genv, lenv))
 
         elif function == "*":
-            return number(evaluate(ast[1], global_env, local_env)) * \
-                   number(evaluate(ast[2], global_env, local_env))
+            return num(evaluate(ast[1], genv, lenv)) * num(evaluate(ast[2], genv, lenv))
 
         elif function == "/":
-            return number(evaluate(ast[1], global_env, local_env)) / \
-                   number(evaluate(ast[2], global_env, local_env))
+            return num(evaluate(ast[1], genv, lenv)) / num(evaluate(ast[2], genv, lenv))
 
         elif function == "=":
             if isinstance(ast[1], list) and isinstance(ast[2], list):
                 return ast[1] == ast[2]
             else:
-                return number(evaluate(ast[1], global_env, local_env)) == \
-                       number(evaluate(ast[2], global_env, local_env))
+                return num(evaluate(ast[1], genv, lenv)) == num(evaluate(ast[2], genv, lenv))
 
         elif function == "def":
-            global_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)
+            genv[str(ast[1])] = evaluate(ast[2], genv, lenv)
             return None
 
         elif function == "do":
             result = None
             for i in range(1, len(ast)):
-                result = evaluate(ast[i], global_env, local_env)
+                result = evaluate(ast[i], genv, lenv)
             return result
 
         elif function == "let":
-            local_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)
+            lenv[str(ast[1])] = evaluate(ast[2], genv, lenv)
             return None
 
         elif function == "fn":
             name = str(uuid.uuid4())
-            global_env[name] = (ast[1], ast[2], local_env)
+            genv[name] = (ast[1], ast[2], lenv)
             return name
 
         elif function == "if":
-            if evaluate(ast[1], global_env, local_env):
-                return evaluate(ast[2], global_env, local_env)
+            if evaluate(ast[1], genv, lenv):
+                return evaluate(ast[2], genv, lenv)
             else:
-                return evaluate(ast[3], global_env, local_env)
+                return evaluate(ast[3], genv, lenv)
 
         elif function == "print":
-            print str(evaluate(ast[1], global_env, local_env))
+            print str(evaluate(ast[1], genv, lenv))
             return None
 
         elif function == "list":
             result = []
             for i in range(1, len(ast)):
-                result.append(evaluate(ast[i], global_env, local_env))
+                result.append(evaluate(ast[i], genv, lenv))
             return result
 
         elif function == "first":
-            return evaluate(ast[1], global_env, local_env)[0]
+            return evaluate(ast[1], genv, lenv)[0]
 
         elif function == "rest":
-            return evaluate(ast[1], global_env, local_env)[1:]
+            return evaluate(ast[1], genv, lenv)[1:]
 
         elif function == "conj":
-            result = evaluate(ast[1], global_env, local_env)
-            result.append(evaluate(ast[2], global_env, local_env))
+            result = evaluate(ast[1], genv, lenv)
+            result.append(evaluate(ast[2], genv, lenv))
             return result
 
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
-        value = lookup(ast, global_env, local_env)
+        value = lookup(ast, genv, lenv)
         return value
 
 
@@ -158,13 +147,13 @@ def remove_comments(infile):
     return program
 
 
-def run_file(filename, global_env):
+def run_file(filename, genv):
     try:
         with open(filename, 'r') as infile:
             program = remove_comments(infile)
             ast = parse(lex(program))[0]
             debug(ast)
-            evaluate(ast, global_env, {})
+            evaluate(ast, genv, {})
 
     except Exception, ex:
         print "Error: " + str(ex)
@@ -172,12 +161,12 @@ def run_file(filename, global_env):
         sys.exit(1)
 
 
-def load_libs(global_env):
+def load_libs(genv):
     libs = glob.glob("lib/*.kp")
     libs.sort()
     for lib in libs:
         debug("loading: " + lib)
-        run_file(lib, global_env)
+        run_file(lib, genv)
 
 
 def run_tests():
@@ -196,10 +185,10 @@ def main():
     if len(sys.argv) == 1:
         run_tests()
     else:
-        global_env = {}
-        load_libs(global_env)
+        genv = {}
+        load_libs(genv)
         for arg in sys.argv[1:]:
-            run_file(arg, global_env)
+            run_file(arg, genv)
 
 
 if __name__ == "__main__":
