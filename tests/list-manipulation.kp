@@ -6,4 +6,5 @@
   (let squares (squares-to-5))
   (print (first squares))
   (print (rest squares))
-  (print (conj squares (* 6 6))))
+  (print (conj squares (* 6 6)))
+  (print (cons squares (* 6 6))))

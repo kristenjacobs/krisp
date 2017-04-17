@@ -128,6 +128,11 @@ def evaluate(ast, genv, lenv):
         elif function == "rest":
             return evaluate(ast[1], genv, lenv)[1:]
 
+        elif function == "cons":
+            result = evaluate(ast[1], genv, lenv)
+            result.insert(0, evaluate(ast[2], genv, lenv))
+            return result
+
         elif function == "conj":
             result = evaluate(ast[1], genv, lenv)
             result.append(evaluate(ast[2], genv, lenv))
