@@ -4,9 +4,8 @@ A really simple LISP.
 
 ## TODO
 
-- Handle comments.
-- Implement library functions to map/reduce/filter over lists.
-- Test the core lib functions.
 - Implement the logical operators + suuport boolean types.
-- Extend first/rest/conj to work on strings.
+- Implement cons to add to the start of a list.
+- Implement (+ test) library functions to map/reduce/filter over lists.
+- Extend first/rest/conj/cons to work on strings.
 - Implement concat for lists and strings in the library.
