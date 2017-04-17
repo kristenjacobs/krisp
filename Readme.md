@@ -4,7 +4,7 @@ A really simple LISP.
 
 ## TODO
 
-- Implemnt equality for both numbers and lists.
+- Implement equality for both numbers and lists.
 - Sort out the logging.
 - Handle comments.
 - Implement library functions to map/reduce/filter over lists.

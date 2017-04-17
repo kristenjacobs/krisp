@@ -1,24 +1,18 @@
 #!/usr/bin/env python
 
-
-from pprint import pprint
 import glob
+import os
+import pprint
 import shlex
 import sys
 import traceback
-import os
 import uuid
 
 
 DEBUG = False
-
-
-def debug(obj, pp=False):
+def debug(obj):
     if DEBUG:
-        if pp:
-            pprint(obj)
-        else:    
-            print str(obj)
+        pprint.pprint(obj)
 
 
 def tokenise(program):
@@ -58,18 +52,18 @@ def lookup(key, global_env, local_env):
             result = local_env[str(result)]
         elif str(result) in global_env:
             result = global_env[str(result)]
-    return result    
+    return result
 
 
 def evaluate(ast, global_env, local_env):
+    debug("evaluate ast: " + str(ast))
     if isinstance(ast, list):
         if isinstance(ast[0], list):
             function = evaluate(ast[0], global_env, local_env)
         else:
             function = str(ast[0])
-          
+
         if defined(function, global_env, local_env):
-            debug("evaluating function: " + str(function))            
             args = lookup(function, global_env, local_env)[0]
             body = lookup(function, global_env, local_env)[1]
             env = lookup(function, global_env, local_env)[2]
@@ -81,85 +75,70 @@ def evaluate(ast, global_env, local_env):
             return evaluate(body, global_env, f_local_env)
 
         elif function == "+":
-            debug("evaluating +")
             return number(evaluate(ast[1], global_env, local_env)) + \
                    number(evaluate(ast[2], global_env, local_env))
 
         elif function == "-":
-            debug("evaluating -")
             return number(evaluate(ast[1], global_env, local_env)) - \
                    number(evaluate(ast[2], global_env, local_env))
 
         elif function == "*":
-            debug("evaluating *")
             return number(evaluate(ast[1], global_env, local_env)) * \
                    number(evaluate(ast[2], global_env, local_env))
 
         elif function == "/":
-            debug("evaluating /")
             return number(evaluate(ast[1], global_env, local_env)) / \
                    number(evaluate(ast[2], global_env, local_env))
 
         elif function == "=":
-            debug("evaluating = " + str(ast[1]) + str(ast[2]))
             if isinstance(ast[1], list) and isinstance(ast[2], list):
                 return ast[1] == ast[2]
-            else:    
+            else:
                 return number(evaluate(ast[1], global_env, local_env)) == \
                        number(evaluate(ast[2], global_env, local_env))
 
         elif function == "def":
-            debug("evaluating def: " + str(ast[1]))
-            global_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
+            global_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)
             return None
 
         elif function == "do":
-            debug("evaluating do")
             result = None
             for i in range(1, len(ast)):
-                result = evaluate(ast[i], global_env, local_env)  
+                result = evaluate(ast[i], global_env, local_env)
             return result
 
         elif function == "let":
-            debug("evaluating let")
-            local_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)  
+            local_env[str(ast[1])] = evaluate(ast[2], global_env, local_env)
             return None
 
         elif function == "fn":
             name = str(uuid.uuid4())
-            debug("evaluating fn: " + name)
             global_env[name] = (ast[1], ast[2], local_env)
             return name
 
         elif function == "if":
-            debug("evaluating if")
             if evaluate(ast[1], global_env, local_env):
                 return evaluate(ast[2], global_env, local_env)
             else:
                 return evaluate(ast[3], global_env, local_env)
 
         elif function == "print":
-            debug("evaluating print")
             print str(evaluate(ast[1], global_env, local_env))
             return None
 
         elif function == "list":
-            debug("evaluating list")
             result = []
             for i in range(1, len(ast)):
                 result.append(evaluate(ast[i], global_env, local_env))
             return result
 
         elif function == "first":
-            debug("evaluating first: " + str(ast))
             return evaluate(ast[1], global_env, local_env)[0]
 
         elif function == "rest":
-            debug("evaluating rest")
             return evaluate(ast[1], global_env, local_env)[1:]
 
         elif function == "conj":
-            debug("evaluating conj: " + str(ast))
             result = evaluate(ast[1], global_env, local_env)
             result.append(evaluate(ast[2], global_env, local_env))
             return result
@@ -168,7 +147,6 @@ def evaluate(ast, global_env, local_env):
             raise Exception, "Function: " + function + " not defined"
     else:
         value = lookup(ast, global_env, local_env)
-        debug("performing lookup: " + str(ast) + " -> " + str(value))
         return value
 
 
@@ -177,7 +155,7 @@ def run_file(filename, global_env):
         with open(filename, 'r') as infile:
             program = infile.read().rstrip('\n')
             ast = parse(tokenise(program))[0]
-            debug(ast, True)
+            debug(ast)
             evaluate(ast, global_env, {})
 
     except Exception, ex:
@@ -190,19 +168,19 @@ def load_libs(global_env):
     libs = glob.glob("lib/*.kp")
     libs.sort()
     for lib in libs:
-        debug("Loading: " + lib)
+        debug("loading: " + lib)
         run_file(lib, global_env)
 
 
 def run_tests():
     tests = glob.glob("tests/*.kp")
     tests.sort()
-    for test in tests:    
+    for test in tests:
         print "%-50s ... " % test,
         os.system("./krisp.py " + test + " > " + test + ".log 2>&1")
         if os.system("diff " + test + ".expect " + test + ".log > /dev/null") == 0:
             print "PASSED"
-        else:     
+        else:
             print "***** FAILED *****"
 
 
