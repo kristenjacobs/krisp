@@ -137,6 +137,22 @@ def evaluate(ast, genv, lenv, tracing, depth):
             else:
                 result = num(lhs) == num(rhs)
 
+        elif function == "<":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) < \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "<=":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) <= \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == ">":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) > \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == ">=":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) >= \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
         elif function == "list":
             result = []
             for i in range(1, len(ast)):
