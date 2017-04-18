@@ -107,6 +107,12 @@ def evaluate(ast, genv, lenv, tracing, depth):
             print str(evaluate(ast[1], genv, lenv, tracing, depth+1))
             result = None
 
+        elif function == "env":
+            env = genv.copy()
+            env.update(lenv)
+            pprint.pprint(env)
+            result = None
+
         elif function == "+":
             result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) + \
                      num(evaluate(ast[2], genv, lenv, tracing, depth+1))

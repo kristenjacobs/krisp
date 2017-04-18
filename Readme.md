@@ -4,7 +4,6 @@ A really simple LISP.
 
 ## TODO
 
-- Add 'env' builtin to dump the global + local environment. 
 - Add implementation of 'partial' to the library.
 - Implement (+ test) library functions to map/reduce/filter over lists.
 - Implement the logical operators + suuport boolean types.
