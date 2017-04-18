@@ -1,0 +1,6 @@
+(do
+
+  (def add (fn (x y)
+    (+ x y)))
+
+  (trace (add 10 12)))

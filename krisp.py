@@ -10,10 +10,18 @@ import traceback
 import uuid
 
 
-DEBUG = False
-def debug(obj):
-    if DEBUG:
-        pprint.pprint(obj)
+def enter(obj, depth):
+    for _ in range(0, depth):
+        print " ",
+    print ">>",
+    pprint.pprint(obj)
+
+
+def leave(obj, depth):
+    for _ in range(0, depth):
+        print " ",
+    print "<<",
+    pprint.pprint(obj)
 
 
 def lex(program):
@@ -57,94 +65,105 @@ def lookup(key, genv, lenv):
     return result
 
 
-def evaluate(ast, genv, lenv):
-    debug("evaluate ast: " + str(ast))
+def evaluate(ast, genv, lenv, tracing, depth):
+    if tracing:
+        enter(ast, depth)
+    result = None
     if isinstance(ast, list):
-        function = evaluate(ast[0], genv, lenv) if isinstance(ast[0], list) else str(ast[0])
+        function = evaluate(ast[0], genv, lenv, tracing, depth+1) \
+            if isinstance(ast[0], list) else str(ast[0])
 
         if defined(function, genv, lenv):
             func = lookup(function, genv, lenv)
             f_lenv = func[2].copy()
             for i, arg in enumerate(func[0]):
-                f_lenv[arg] = evaluate(ast[i + 1], genv, lenv)
-            return evaluate(func[1], genv, f_lenv)
+                f_lenv[arg] = evaluate(ast[i + 1], genv, lenv, tracing, depth+1)
+            result = evaluate(func[1], genv, f_lenv, tracing, depth+1)
 
         elif function == "+":
-            return num(evaluate(ast[1], genv, lenv)) + num(evaluate(ast[2], genv, lenv))
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) + \
+                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         elif function == "-":
-            return num(evaluate(ast[1], genv, lenv)) - num(evaluate(ast[2], genv, lenv))
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) - \
+                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         elif function == "*":
-            return num(evaluate(ast[1], genv, lenv)) * num(evaluate(ast[2], genv, lenv))
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) * \
+                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         elif function == "/":
-            return num(evaluate(ast[1], genv, lenv)) / num(evaluate(ast[2], genv, lenv))
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) / \
+                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         elif function == "=":
-            lhs = evaluate(ast[1], genv, lenv)
-            rhs = evaluate(ast[2], genv, lenv)
+            lhs = evaluate(ast[1], genv, lenv, tracing, depth+1)
+            rhs = evaluate(ast[2], genv, lenv, tracing, depth+1)
             if isinstance(lhs, list) and isinstance(rhs, list):
-                return lhs == rhs
+                result = lhs == rhs
             else:
-                return num(lhs) == num(rhs)
+                result = num(lhs) == num(rhs)
 
         elif function == "def":
-            genv[str(ast[1])] = evaluate(ast[2], genv, lenv)
-            return None
+            genv[str(ast[1])] = evaluate(ast[2], genv, lenv, tracing, depth+1)
+            result = None
 
         elif function == "do":
             result = None
             for i in range(1, len(ast)):
-                result = evaluate(ast[i], genv, lenv)
-            return result
+                result = evaluate(ast[i], genv, lenv, tracing, depth+1)
+            result = result
 
         elif function == "let":
-            lenv[str(ast[1])] = evaluate(ast[2], genv, lenv)
-            return None
+            lenv[str(ast[1])] = evaluate(ast[2], genv, lenv, tracing, depth+1)
+            result = None
 
         elif function == "fn":
             name = str(uuid.uuid4())
             genv[name] = (ast[1], ast[2], lenv)
-            return name
+            result = name
 
         elif function == "if":
-            if evaluate(ast[1], genv, lenv):
-                return evaluate(ast[2], genv, lenv)
+            if evaluate(ast[1], genv, lenv, tracing, depth+1):
+                result = evaluate(ast[2], genv, lenv, tracing, depth+1)
             else:
-                return evaluate(ast[3], genv, lenv)
+                result = evaluate(ast[3], genv, lenv, tracing, depth+1)
+
+        elif function == "trace":
+            result = evaluate(ast[1], genv, lenv, True, 0)
 
         elif function == "print":
-            print str(evaluate(ast[1], genv, lenv))
-            return None
+            print str(evaluate(ast[1], genv, lenv, tracing, depth+1))
+            result = None
 
         elif function == "list":
             result = []
             for i in range(1, len(ast)):
-                result.append(evaluate(ast[i], genv, lenv))
-            return result
+                result.append(evaluate(ast[i], genv, lenv, tracing, depth+1))
 
         elif function == "first":
-            return evaluate(ast[1], genv, lenv)[0]
+            result = evaluate(ast[1], genv, lenv, tracing, depth+1)[0]
 
         elif function == "rest":
-            return evaluate(ast[1], genv, lenv)[1:]
+            result = evaluate(ast[1], genv, lenv, tracing, depth+1)[1:]
 
         elif function == "cons":
-            result = evaluate(ast[1], genv, lenv)
-            result.insert(0, evaluate(ast[2], genv, lenv))
-            return result
+            result = evaluate(ast[1], genv, lenv, tracing, depth+1)
+            result.insert(0, evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         elif function == "conj":
-            result = evaluate(ast[1], genv, lenv)
-            result.append(evaluate(ast[2], genv, lenv))
-            return result
+            result = evaluate(ast[1], genv, lenv, tracing, depth+1)
+            result.append(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
         value = lookup(ast, genv, lenv)
-        return value
+        result = value
+
+    if tracing:
+        leave(result, depth)
+    return result
 
 
 def remove_comments(infile):
@@ -159,8 +178,7 @@ def run_file(filename, genv):
         with open(filename, 'r') as infile:
             program = remove_comments(infile)
             ast = parse(lex(program))[0]
-            debug(ast)
-            evaluate(ast, genv, {})
+            evaluate(ast, genv, {}, False, 0)
 
     except Exception, ex:
         print "Error: " + str(ex)
@@ -172,7 +190,6 @@ def load_libs(genv):
     libs = glob.glob("lib/*.kp")
     libs.sort()
     for lib in libs:
-        debug("loading: " + lib)
         run_file(lib, genv)
 
 
