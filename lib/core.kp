@@ -1,10 +1,10 @@
 (do 
  
-  (def add (fn (x y)
-    (+ x y)))
+  (def inc (fn (x)
+    (+ x 1)))
 
-  (def sub (fn (x y)
-    (- x y)))
+  (def dec (fn (x)
+    (- x 1)))
 
   (def reduce (fn (f v l)
     (if (= l (list))
@@ -12,5 +12,5 @@
       (reduce f (f v (first l)) (rest l)))))
 
   (def map (fn (f l)
-    ; TODO
-    l)))
+    (reduce (fn (result element) (conj result (f element))) 
+            (list) l))))

@@ -1,3 +1,7 @@
 (do
+  (def add (fn (x y)
+    (+ x y)))
+
   (print (reduce add 0 (list 1 2 3 4 5)))
+  (print (reduce (fn (x y) (+ x y)) 0 (list 1 2 3 4 5)))
   (print (reduce + 0 (list 1 2 3 4 5))))
