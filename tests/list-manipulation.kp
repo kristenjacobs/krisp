@@ -8,3 +8,7 @@
   (print (rest squares))
   (print (conj squares (* 6 6)))
   (print (cons squares (* 6 6))))
+;;1
+;;[4, 9, 16, 25]
+;;[1, 4, 9, 16, 25, 36]
+;;[36, 1, 4, 9, 16, 25, 36]

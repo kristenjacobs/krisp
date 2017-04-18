@@ -6,3 +6,4 @@
       (print "They are different"))))
 
   (f 2 2))
+;;They are the same

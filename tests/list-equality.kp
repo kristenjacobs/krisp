@@ -3,5 +3,8 @@
   (print (= (list) (list)))
   (print (= (list 1) (list 1)))
   (print (= (list 1) (list 1 1)))
-  (print (= (list 1) (list 2)))
-)
+  (print (= (list 1) (list 2))))
+;;True
+;;True
+;;False
+;;False
