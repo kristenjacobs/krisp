@@ -193,26 +193,16 @@ def load_libs(genv):
         run_file(lib, genv)
 
 
-def run_tests():
-    tests = glob.glob("tests/*.kp")
-    tests.sort()
-    for test in tests:
-        print "%-50s ... " % test,
-        os.system("./krisp.py " + test + " > " + test + ".log 2>&1")
-        if os.system("diff " + test + ".expect " + test + ".log > /dev/null") == 0:
-            print "PASSED"
-        else:
-            print "***** FAILED *****"
-
-
 def main():
-    if len(sys.argv) == 1:
-        run_tests()
-    else:
+    if len(sys.argv) >= 2:
         genv = {}
         load_libs(genv)
         for arg in sys.argv[1:]:
             run_file(arg, genv)
+    else:
+        print "Invalid arguments. Usage:"
+        print "  ./krisp.py <file1.kp> <file2.kp> ...etc"
+        sys.exit(1)
 
 
 if __name__ == "__main__":
