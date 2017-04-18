@@ -129,6 +129,10 @@ def evaluate(ast, genv, lenv, tracing, depth):
             result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) / \
                      num(evaluate(ast[2], genv, lenv, tracing, depth+1))
 
+        elif function == "%":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) % \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
         elif function == "=":
             lhs = evaluate(ast[1], genv, lenv, tracing, depth+1)
             rhs = evaluate(ast[2], genv, lenv, tracing, depth+1)

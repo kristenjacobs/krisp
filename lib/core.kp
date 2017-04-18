@@ -6,11 +6,25 @@
   (def dec (fn (x)
     (- x 1)))
 
+  (def even? (fn (x)
+    (= (% x 2) 0)))
+
+  (def odd? (fn (x)
+    (= (% x 2) 1)))
+
   (def reduce (fn (f v l)
     (if (= l (list))
       v
       (reduce f (f v (first l)) (rest l)))))
 
   (def map (fn (f l)
-    (reduce (fn (result element) (conj result (f element))) 
+    (reduce (fn (result element) 
+              (conj result (f element))) 
+            (list) l)))
+
+  (def filter (fn (f l)
+    (reduce (fn (result element)
+              (if (f element) 
+                (conj result element)
+                result)) 
             (list) l))))
