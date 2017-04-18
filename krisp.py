@@ -14,7 +14,7 @@ def enter(obj, depth):
     for _ in range(0, depth):
         print " ",
     print ">>",
-    pprint.pprint(obj)
+    print obj
 
 
 def leave(obj, depth):
@@ -51,10 +51,6 @@ def num(n):
             raise Exception, "Unable to convert " + str(n) + " to a number"
 
 
-def defined(key, genv, lenv):
-    return str(key) in lenv or str(key) in genv
-
-
 def lookup(key, genv, lenv):
     result = key
     while str(result) in lenv or str(result) in genv:
@@ -68,41 +64,16 @@ def lookup(key, genv, lenv):
 def evaluate(ast, genv, lenv, tracing, depth):
     if tracing:
         enter(ast, depth)
+
     result = None
     if isinstance(ast, list):
-        function = evaluate(ast[0], genv, lenv, tracing, depth+1) \
-            if isinstance(ast[0], list) else str(ast[0])
+        function = lookup(evaluate(ast[0], genv, lenv, tracing, depth+1), genv, lenv)
 
-        if defined(function, genv, lenv):
-            func = lookup(function, genv, lenv)
-            f_lenv = func[2].copy()
-            for i, arg in enumerate(func[0]):
+        if isinstance(function, tuple):
+            f_lenv = function[2].copy()
+            for i, arg in enumerate(function[0]):
                 f_lenv[arg] = evaluate(ast[i + 1], genv, lenv, tracing, depth+1)
-            result = evaluate(func[1], genv, f_lenv, tracing, depth+1)
-
-        elif function == "+":
-            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) + \
-                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
-
-        elif function == "-":
-            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) - \
-                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
-
-        elif function == "*":
-            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) * \
-                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
-
-        elif function == "/":
-            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) / \
-                   num(evaluate(ast[2], genv, lenv, tracing, depth+1))
-
-        elif function == "=":
-            lhs = evaluate(ast[1], genv, lenv, tracing, depth+1)
-            rhs = evaluate(ast[2], genv, lenv, tracing, depth+1)
-            if isinstance(lhs, list) and isinstance(rhs, list):
-                result = lhs == rhs
-            else:
-                result = num(lhs) == num(rhs)
+            result = evaluate(function[1], genv, f_lenv, tracing, depth+1)
 
         elif function == "def":
             genv[str(ast[1])] = evaluate(ast[2], genv, lenv, tracing, depth+1)
@@ -136,6 +107,30 @@ def evaluate(ast, genv, lenv, tracing, depth):
             print str(evaluate(ast[1], genv, lenv, tracing, depth+1))
             result = None
 
+        elif function == "+":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) + \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "-":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) - \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "*":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) * \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "/":
+            result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) / \
+                     num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "=":
+            lhs = evaluate(ast[1], genv, lenv, tracing, depth+1)
+            rhs = evaluate(ast[2], genv, lenv, tracing, depth+1)
+            if isinstance(lhs, list) and isinstance(rhs, list):
+                result = lhs == rhs
+            else:
+                result = num(lhs) == num(rhs)
+
         elif function == "list":
             result = []
             for i in range(1, len(ast)):
@@ -158,8 +153,7 @@ def evaluate(ast, genv, lenv, tracing, depth):
         else:
             raise Exception, "Function: " + function + " not defined"
     else:
-        value = lookup(ast, genv, lenv)
-        result = value
+        result = lookup(ast, genv, lenv)
 
     if tracing:
         leave(result, depth)
