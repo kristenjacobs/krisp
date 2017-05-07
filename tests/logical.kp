@@ -1,0 +1,38 @@
+(do
+  (print (and 1 1))
+  (print (and 0 1))
+  (print (and true true))
+  (print (and true false))
+
+  (print (or 1 1))
+  (print (or 0 1))
+  (print (or 0 0))
+  (print (or true true))
+  (print (or true false))
+  (print (or false false))
+
+  (print (not 0))
+  (print (not 1))
+  (print (not true))
+  (print (not false))
+  (print (not (+ 1 1)))
+  (print (not (- 1 1))))
+
+;;True
+;;False
+;;True
+;;False
+
+;;True
+;;True
+;;False
+;;True
+;;True
+;;False
+
+;;True
+;;False
+;;False
+;;True
+;;False
+;;True

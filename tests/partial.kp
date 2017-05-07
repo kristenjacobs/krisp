@@ -1,0 +1,16 @@
+(do
+  (def add2args (fn (a b)     (+ a b)))
+  (def add3args (fn (a b c)   (+ (+ a b) c)))
+  (def add4args (fn (a b c d) (+ (+ (+ a b) c) d)))
+
+  (let add2-1 (partial-1 add2args 1))
+  (let add3-1 (partial-2 add3args 1))
+  (let add4-1 (partial-3 add4args 1))
+
+  (print (add2-1 2))    
+  (print (add3-1 2 3))    
+  (print (add4-1 2 3 4)))
+
+;;3
+;;6
+;;10

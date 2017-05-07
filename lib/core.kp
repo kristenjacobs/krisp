@@ -27,4 +27,16 @@
               (if (f element) 
                 (conj result element)
                 result)) 
-            (list) l))))
+            (list) l)))
+
+  (def partial-1 (fn (f x)
+    (fn (a1)
+      (f x a1))))
+ 
+  (def partial-2 (fn (f x)
+    (fn (a1 a2)
+      (f x a1 a2))))
+
+  (def partial-3 (fn (f x)
+    (fn (a1 a2 a3)
+      (f x a1 a2 a3)))))

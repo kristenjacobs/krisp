@@ -51,6 +51,10 @@ def num(n):
             raise Exception, "Unable to convert " + str(n) + " to a number"
 
 
+def boolean(b):
+    return b != 0 and b != "0" and b != "false" and b != "False"
+
+
 def lookup(key, genv, lenv):
     result = key
     while str(result) in lenv or str(result) in genv:
@@ -141,6 +145,14 @@ def evaluate(ast, genv, lenv, tracing, depth):
             else:
                 result = num(lhs) == num(rhs)
 
+        elif function == "not=":
+            lhs = evaluate(ast[1], genv, lenv, tracing, depth+1)
+            rhs = evaluate(ast[2], genv, lenv, tracing, depth+1)
+            if isinstance(lhs, list) and isinstance(rhs, list):
+                result = lhs != rhs
+            else:
+                result = num(lhs) != num(rhs)
+
         elif function == "<":
             result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) < \
                      num(evaluate(ast[2], genv, lenv, tracing, depth+1))
@@ -156,6 +168,17 @@ def evaluate(ast, genv, lenv, tracing, depth):
         elif function == ">=":
             result = num(evaluate(ast[1], genv, lenv, tracing, depth+1)) >= \
                      num(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "and":
+            result = boolean(evaluate(ast[1], genv, lenv, tracing, depth+1)) and \
+                     boolean(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "or":
+            result = boolean(evaluate(ast[1], genv, lenv, tracing, depth+1)) or \
+                     boolean(evaluate(ast[2], genv, lenv, tracing, depth+1))
+
+        elif function == "not":
+            result = not boolean(evaluate(ast[1], genv, lenv, tracing, depth+1))
 
         elif function == "list":
             result = []
